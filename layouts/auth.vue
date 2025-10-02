@@ -21,22 +21,5 @@
         ></v-btn>
       </div>
     </header>
-    <main>
-      <slot />
-    </main>
-    <footer>
-      <p>&copy; 2025 My Website</p>
-    </footer>
   </v-app>
 </template>
-
-<script setup lang="ts">
-const colorMode = useColorMode();
-import { useTheme } from "vuetify";
-
-const theme = useTheme();
-
-function toggleDarkMode() {
-  colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
-}
-</script>
