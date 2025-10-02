@@ -30,13 +30,4 @@
   </v-app>
 </template>
 
-<script setup lang="ts">
-const colorMode = useColorMode();
-import { useTheme } from "vuetify";
-
-const theme = useTheme();
-
-function toggleDarkMode() {
-  colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
-}
-</script>
+<script setup lang="ts"></script>

@@ -21,5 +21,6 @@
         ></v-btn>
       </div>
     </header>
+    <slot />
   </v-app>
 </template>

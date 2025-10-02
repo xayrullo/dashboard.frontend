@@ -3,6 +3,7 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+  routeRules: {},
   build: {
     transpile: ['vuetify'],
   },
@@ -25,7 +26,7 @@ export default defineNuxtConfig({
   },
   modules: [
     "@nuxtjs/tailwindcss",
-    '@nuxtjs/color-mode',
+    '@pinia/nuxt',
     (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
         config.plugins?.push(vuetify({ autoImport: true }))
@@ -33,7 +34,10 @@ export default defineNuxtConfig({
     }
   ],
   css: ["@/assets/css/tailwind.css"],
-  colorMode: {
-    classSuffix: '',
+  pinia: {
+    autoImports: [
+      'defineStore',
+      ['defineStore', 'definePiniaStore'],
+    ],
   },
 });
