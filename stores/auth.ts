@@ -1,47 +1,40 @@
 import { defineStore } from "pinia";
 import { useCookie } from "#app";
+import { fetchLogin } from "~/services/auth";
+
+import type { IUser } from "~/types/auth";
 
 export const useAuthStore = defineStore("auth", () => {
   const token = useCookie<string | null>("token", { default: () => null });
   const refreshToken = useCookie<string | null>("refreshToken", {
     default: () => null,
   });
-  const user = ref<Record<string, any> | null>(null);
+  const user = ref<IUser | null>(null);
 
   const isAuthenticated = computed(() => !!token.value);
 
-  async function login(email: string, password: string) {
+  async function login(params: { username: string; password: string }) {
     try {
-      const res = await $fetch<{
-        token: string;
-        refreshToken: string;
-        user: any;
-      }>("/api/auth/login", {
-        method: "POST",
-        body: { email, password },
-      });
-
-      token.value = res.token;
-      refreshToken.value = res.refreshToken;
-      user.value = res.user;
+      const res = await fetchLogin(params);
+      if (res.success.value && res.data.value) {
+        const data = res.data.value;
+        token.value = data.accessToken;
+        refreshToken.value = data.refreshToken;
+        user.value = {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          gender: data.gender,
+          image: data.image,
+        };
+        return;
+      }
+      throw res.error.value;
     } catch (err) {
       console.error("[Auth] Login failed", err);
       throw err;
-    }
-  }
-
-  async function refresh() {
-    if (!refreshToken.value) return;
-
-    try {
-      const res = await $fetch<{ token: string }>("/api/auth/refresh", {
-        method: "POST",
-        body: { refreshToken: refreshToken.value },
-      });
-      token.value = res.token;
-    } catch (err) {
-      console.error("[Auth] Refresh failed", err);
-      logout();
     }
   }
 
@@ -51,13 +44,22 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = null;
   }
 
+  function setToken(newToken: string) {
+    token.value = newToken;
+  }
+
+  function setRefreshToken(newRefreshToken: string) {
+    refreshToken.value = newRefreshToken;
+  }
+
   return {
     token,
     refreshToken,
     user,
     isAuthenticated,
     login,
-    refresh,
     logout,
+    setToken,
+    setRefreshToken,
   };
 });

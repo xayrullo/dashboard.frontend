@@ -1,4 +1,5 @@
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import "dotenv/config";
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -6,6 +7,11 @@ export default defineNuxtConfig({
   routeRules: {},
   build: {
     transpile: ['vuetify'],
+  },
+  runtimeConfig: {
+    public: {
+      baseUrl: process.env.BASE_URL,
+    },
   },
   ssr: true,
   typescript: {
