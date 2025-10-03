@@ -7,7 +7,7 @@ export const fetchLogin = async (params: {
   email: string;
   password: string;
 }) => {
-  const response = await useApi<ILoginResponse>("/api/v1/auth/login", {
+  const response = await useApi<ILoginResponse>("/api/auth/login", {
     method: "POST",
     body: params,
   });

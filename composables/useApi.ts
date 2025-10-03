@@ -38,7 +38,7 @@ export async function useApi<T = unknown>(
   let executeFn: (() => Promise<void>) | null = null;
 
   const defaultOptions: FetchOptions<T> = {
-    baseURL: `${config.public.baseUrl}`,
+    // baseURL: `${config.public.baseUrl}`,
     method: "GET",
     retry: 3,
     signal: userOptions.timeout ? controller.signal : undefined,

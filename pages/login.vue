@@ -48,8 +48,8 @@ const authStore = useAuthStore();
 
 const formRef = ref<HTMLFormElement | null>(null);
 const form = ref<{ email: string; password: string }>({
-  email: "sophia.brown@x.dummyjson.com",
-  password: "sophiabpass",
+  email: "faker@gmail.com",
+  password: "123456",
 });
 
 const rules = {
@@ -57,6 +57,7 @@ const rules = {
   email: (v: string) => /.+@.+\..+/.test(v) || "E-mail must be valid",
   min: (v: string) => v.length >= 6 || "Minimum 6 characters",
 };
+
 async function login() {
   const { valid } = await formRef.value?.validate();
   if (valid) {
