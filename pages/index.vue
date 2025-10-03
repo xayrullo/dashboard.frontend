@@ -61,7 +61,7 @@
             <div class="font-semibold">Total Sales</div>
             <client-only class="flex items-center justify-center">
               <chart-base
-                v-if="totalSales && !totalSalesPending"
+                v-if="totalSales"
                 type="doughnut"
                 :data="totalSales"
               />
@@ -71,25 +71,30 @@
           <div class="w-full lg:w-2/3">
             <div class="text font-semibold">Sales Analytics</div>
             <client-only class="flex items-center justify-center">
-              <chart-base type="bar" :data="totalSalesByCategory" />
+              <chart-base
+                v-if="salesAnalytics"
+                type="bar"
+                width="100%"
+                :data="salesAnalytics"
+              />
             </client-only>
           </div>
         </v-card-text>
-        <client-only>
+        <!-- <client-only>
           <chart-base type="line" :data="lineChartData" />
           <chart-base type="pie" :data="pieChartData" />
           <chart-base type="radar" :data="radarChartData" />
           <chart-base type="polarArea" :data="polarAreaChartData" />
           <chart-base type="bubble" :data="bubbleChartData" />
           <chart-base type="scatter" :data="scatterChartData" />
-        </client-only>
+        </client-only> -->
       </v-card>
     </div>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { fetchTotalSales } from "~/services/dashboard";
+import { fetchSalesAnalytics, fetchTotalSales } from "~/services/dashboard";
 import type { ITotalSales } from "~/types/dashboard";
 
 const breadcrumbs = [
@@ -252,21 +257,36 @@ const { data: totalSalesData, pending: totalSalesPending } = useAsyncData(
   }
 );
 
+const { data: salesAnalyticsData, pending: salesAnalyticsPending } =
+  useAsyncData("fetch-sales-analytics", async () => {
+    const response = await fetchSalesAnalytics({
+      startDate: "2025-09-25",
+      endDate: "2025-09-29",
+      categories: ["book", "phone", "pc", "car"],
+    });
+
+    return response.data.value ?? [];
+  });
+
 const totalSales = computed(() => {
-  if (totalSalesData.value) {
-    return {
-      labels: totalSalesData.value.map((item) => item.label),
-      datasets: [
-        {
-          label: "",
-          data: totalSalesData.value.map((item) => item.data),
-          backgroundColor: totalSalesData.value.map(
-            (item) => item.backgroundColor
-          ),
-          hoverOffset: 4,
-        },
-      ],
-    } as ITotalSales;
-  }
+  if (!totalSalesData.value) return null;
+  return {
+    labels: totalSalesData.value.map((item) => item.label),
+    datasets: [
+      {
+        label: "",
+        data: totalSalesData.value.map((item) => item.data),
+        backgroundColor: totalSalesData.value.map(
+          (item) => item.backgroundColor
+        ),
+        hoverOffset: 4,
+      },
+    ],
+  } as ITotalSales;
+});
+
+const salesAnalytics = computed(() => {
+  if (!salesAnalyticsData.value) return null;
+  return salesAnalyticsData.value;
 });
 </script>

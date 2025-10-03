@@ -1,5 +1,5 @@
 import type { IErrorResponse } from "~/types";
-import type { ITotalSalesResponse } from "~/types/dashboard";
+import type { ITotalSales, ITotalSalesResponse } from "~/types/dashboard";
 
 export const fetchTotalSales = async (params: {
   startDate: string;
@@ -12,7 +12,24 @@ export const fetchTotalSales = async (params: {
 
   return {
     data: data,
-    error: error,
+    error: error.value as IErrorResponse,
+    success: computed(() => !error.value),
+  };
+};
+
+export const fetchSalesAnalytics = async (params: {
+  startDate: string;
+  endDate: string;
+  categories: string[];
+}) => {
+  const { data, error } = await useApi<ITotalSales>(
+    "/api/dashboard/sales-analytics",
+    { query: params }
+  );
+
+  return {
+    data: data,
+    error: error.value as IErrorResponse,
     success: computed(() => !error.value),
   };
 };

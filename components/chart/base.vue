@@ -5,6 +5,7 @@
       :data="chartData"
       :options="chartOptions"
       :height="height"
+      :width="width"
     />
   </div>
 </template>
@@ -63,6 +64,7 @@ interface BaseChartProps {
   data: any;
   options?: any;
   height?: number;
+  width?: number | string;
 }
 
 const props = defineProps<BaseChartProps>();
