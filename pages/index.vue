@@ -1,17 +1,18 @@
 <template>
   <v-container>
+    <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="text-lg font-semibold">Dashboard</div>
       <v-breadcrumbs :items="breadcrumbs">
-        <template v-slot:divider>
-          <v-icon icon="mdi-chevron-right"></v-icon>
+        <template #divider>
+          <v-icon icon="mdi-chevron-right" />
         </template>
       </v-breadcrumbs>
     </div>
+
     <div class="space-y-4">
-      <div
-        class="block md:flex items-center justify-end gap-x-4 space-y-4 md:space-y-0"
-      >
+      <!-- Filters -->
+      <div class="block md:flex items-center justify-end gap-x-4">
         <v-select
           v-model="queryParams.categories"
           :items="CATEGORIES"
@@ -20,8 +21,7 @@
           chips
           label="Categories"
           class="w-full md:max-w-[300px]"
-        >
-        </v-select>
+        />
         <date-input
           v-if="periodType === 'range'"
           v-model="dateRange"
@@ -30,92 +30,50 @@
           :max-date="getNextDateString(new Date(), 1)"
           label="Date range"
           class="w-full md:max-w-[300px]"
-          @on-change="onChangeDateRange"
         />
         <v-select
           v-model="periodType"
           :items="PERIOD_TYPES"
           label="Range type"
           class="w-full md:max-w-[300px]"
-        ></v-select>
+        />
       </div>
+
+      <!-- Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-        <v-card class="col-span-1">
+        <v-card v-for="card in cards" :key="card.label" class="col-span-1">
           <v-card-text class="flex items-center justify-between">
-            <v-btn
-              variant="text"
-              color="purple"
-              icon="mdi-cash-multiple"
-            ></v-btn>
+            <v-btn variant="text" :color="card.color" :icon="card.icon" />
             <div class="text-right">
               <div class="text-lg font-semibold">
-                {{ priceFormatter(cardsData?.totalSales, "$") }}
+                {{ priceFormatter(cardsData?.[card.key], card.symbol) }}
               </div>
-              <div class="text-sm text-gray-500">Total Sales</div>
-            </div>
-          </v-card-text>
-        </v-card>
-        <v-card class="col-span-1">
-          <v-card-text class="flex items-center justify-between">
-            <v-btn variant="text" color="green" icon="mdi-cart-outline"></v-btn>
-            <div class="text-right">
-              <div class="text-lg font-semibold">
-                {{ priceFormatter(cardsData?.totalOrders) }}
-              </div>
-              <div class="text-sm text-gray-500">Total Orders</div>
-            </div>
-          </v-card-text>
-        </v-card>
-        <v-card class="col-span-1">
-          <v-card-text class="flex items-center justify-between">
-            <v-btn variant="text" color="blue" icon="mdi-cash-multiple"></v-btn>
-            <div class="text-right">
-              <div class="text-lg font-semibold">
-                {{ priceFormatter(cardsData?.bill, "$") }}
-              </div>
-              <div class="text-sm text-gray-500">Average Bill</div>
-            </div>
-          </v-card-text>
-        </v-card>
-        <v-card class="col-span-1">
-          <v-card-text class="flex items-center justify-between">
-            <v-btn
-              variant="text"
-              color="yellow"
-              icon="mdi-account-multiple"
-            ></v-btn>
-            <div class="text-right">
-              <div class="text-lg font-semibold">
-                {{ priceFormatter(cardsData?.users) }}
-              </div>
-              <div class="text-sm text-gray-500">Unique Users</div>
+              <div class="text-sm text-gray-500">{{ card.label }}</div>
             </div>
           </v-card-text>
         </v-card>
       </div>
+
+      <!-- Charts -->
       <v-card>
         <v-card-text class="lg:flex block lg:space-x-6 space-y-4 lg:space-y-0">
           <div class="w-full lg:w-1/3">
             <div class="font-semibold">Total Sales</div>
-            <client-only class="flex items-center justify-center">
-              <chart-base
-                v-if="totalSales"
-                type="doughnut"
-                :data="totalSales"
-              />
-            </client-only>
+            <chart-base
+              type="doughnut"
+              :data="totalSales"
+              :loading="totalSalesPending"
+            />
           </div>
           <div class="border border-dashed my-6 lg:mx-6"></div>
           <div class="w-full lg:w-2/3">
-            <div class="text font-semibold">Sales Analytics</div>
-            <client-only class="flex items-center justify-center">
-              <chart-base
-                v-if="salesAnalytics"
-                type="bar"
-                width="100%"
-                :data="salesAnalytics"
-              />
-            </client-only>
+            <div class="font-semibold">Sales Analytics</div>
+            <chart-base
+              type="bar"
+              width="100%"
+              :data="salesAnalytics"
+              :loading="salesAnalyticsPending"
+            />
           </div>
         </v-card-text>
       </v-card>
@@ -144,116 +102,105 @@ interface IQueryParams {
 }
 
 const breadcrumbs = [
-  { title: "Home", disabled: false, href: "/" },
+  { title: "Home", href: "/" },
   { title: "Dashboard", disabled: true, href: "/dashboard" },
 ];
 
-const dateRange = ref<string[]>(getDateRangeString(new Date(), 7));
-const periodType = ref<string>("week");
-const queryParams = ref<IQueryParams>({
+// State
+const dateRange = ref<string[] | null>(getDateRangeString(new Date(), 7));
+const periodType = ref<"today" | "week" | "month" | "range">("week");
+
+const queryParams = reactive<IQueryParams>({
   startDate: getNextDateString(new Date(), -6),
   endDate: getNextDateString(new Date(), 1),
   categories: ["book", "notebook", "phone"],
 });
 
-const { data: totalSalesData, pending: totalSalesPending } = useAsyncData(
-  "fetch-total-sales",
-  async () => {
-    const response = await fetchTotalSales(queryParams.value);
-
-    return response.data.value ?? [];
+// Card config
+const cards = [
+  {
+    key: "totalSales",
+    label: "Total Sales",
+    icon: "mdi-cash-multiple",
+    color: "purple",
+    symbol: "$",
   },
   {
-    watch: [() => JSON.stringify(queryParams.value)],
-  }
-);
+    key: "totalOrders",
+    label: "Total Orders",
+    icon: "mdi-cart-outline",
+    color: "green",
+  },
+  {
+    key: "bill",
+    label: "Average Bill",
+    icon: "mdi-cash-multiple",
+    color: "blue",
+    symbol: "$",
+  },
+  {
+    key: "users",
+    label: "Unique Users",
+    icon: "mdi-account-multiple",
+    color: "yellow",
+  },
+];
 
+// Async Data
+const { data: totalSalesData, pending: totalSalesPending } = useAsyncData(
+  "fetch-total-sales",
+  () => fetchTotalSales(queryParams).then((r) => r.data.value),
+  { watch: [queryParams] }
+);
 const { data: salesAnalyticsData, pending: salesAnalyticsPending } =
   useAsyncData(
     "fetch-sales-analytics",
-    async () => {
-      const response = await fetchSalesAnalytics(queryParams.value);
-
-      return response.data.value ?? [];
-    },
-    {
-      watch: [() => JSON.stringify(queryParams.value)],
-    }
+    () => fetchSalesAnalytics(queryParams).then((r) => r.data.value),
+    { watch: [queryParams] }
   );
-
-const { data: cardsData, pending: cardsPending } = useAsyncData(
+const { data: cardsData } = useAsyncData(
   "fetch-cards",
-  async () => {
-    const response = await fetchCards(queryParams.value);
-
-    return response.data.value;
-  },
-  {
-    watch: [() => JSON.stringify(queryParams.value)],
-  }
+  () => fetchCards(queryParams).then((r) => r.data.value),
+  { watch: [queryParams] }
 );
 
-const totalSales = computed(() => {
-  if (!totalSalesData.value) return null;
-  return {
-    labels: totalSalesData.value.map((item) => item.label),
-    datasets: [
-      {
-        label: "",
-        data: totalSalesData.value.map((item) => item.data),
-        backgroundColor: totalSalesData.value.map(
-          (item) => item.backgroundColor
-        ),
-        hoverOffset: 4,
-      },
-    ],
-  } as ITotalSales;
-});
-
-const salesAnalytics = computed(() => {
-  if (!salesAnalyticsData.value) return null;
-  return salesAnalyticsData.value;
-});
-
-function onChangeDateRange() {
-  if (dateRange.value) {
-    queryParams.value = {
-      startDate: dateRange.value[0] as string,
-      endDate: dateRange.value[1] as string,
-      categories: queryParams.value.categories,
-    };
-  }
-}
-
-watch(
-  () => periodType.value,
-  () => {
-    if (periodType.value !== "range") {
-      let startDate = "";
-      let endDate = "";
-      switch (periodType.value) {
-        case "today":
-          startDate = getNextDateString(new Date(), 1);
-          endDate = getNextDateString(new Date(), 2);
-          break;
-        case "week":
-          startDate = getNextDateString(new Date(), -6);
-          endDate = getNextDateString(new Date(), 1);
-          break;
-        case "month":
-          startDate = getNextDateString(new Date(), -29);
-          endDate = getNextDateString(new Date(), 1);
-          break;
-
-        default:
-          break;
+// Computed
+const totalSales = computed<ITotalSales | null>(() =>
+  totalSalesData.value
+    ? {
+        labels: totalSalesData.value.map((i) => i.label),
+        datasets: [
+          {
+            label: "",
+            data: totalSalesData.value.map((i) => i.data),
+            backgroundColor: totalSalesData.value.map((i) => i.backgroundColor),
+            hoverOffset: 4,
+          },
+        ],
       }
-      queryParams.value = {
-        startDate: startDate,
-        endDate: endDate,
-        categories: queryParams.value.categories,
-      };
-    }
-  }
+    : null
 );
+
+const salesAnalytics = computed(() => salesAnalyticsData.value ?? null);
+
+// Watchers
+watch(dateRange, () => {
+  if (periodType.value === "range" && dateRange.value) {
+    [queryParams.startDate, queryParams.endDate] = dateRange.value;
+  }
+});
+
+watch(periodType, () => {
+  if (periodType.value !== "range") {
+    const now = new Date();
+    const ranges: Record<string, [number, number]> = {
+      today: [0, 1],
+      week: [-6, 1],
+      month: [-29, 1],
+    };
+    const [start, end] = ranges[periodType.value];
+    queryParams.startDate = getNextDateString(now, start);
+    queryParams.endDate = getNextDateString(now, end);
+  }
+});
 </script>

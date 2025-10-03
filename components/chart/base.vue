@@ -1,6 +1,8 @@
 <template>
   <div class="overflow-x-auto">
+    <component v-if="loading" :is="chartSkeletonComponent" />
     <component
+      v-else
       :is="chartComponent"
       :data="chartData"
       :options="chartOptions"
@@ -36,6 +38,9 @@ import {
   Scatter,
 } from "vue-chartjs";
 
+import DoughnutSkeleton from "./skeleton/doughnut.vue";
+import BarSkeleton from "./skeleton/bar.vue";
+
 ChartJS.register(
   Title,
   Tooltip,
@@ -65,6 +70,7 @@ interface BaseChartProps {
   options?: any;
   height?: number;
   width?: number | string;
+  loading?: boolean;
 }
 
 const props = defineProps<BaseChartProps>();
@@ -92,6 +98,15 @@ const chartComponent = computed(() => {
       return Scatter;
     default:
       return Bar;
+  }
+});
+
+const chartSkeletonComponent = computed(() => {
+  switch (props.type) {
+    case "doughnut":
+      return DoughnutSkeleton;
+    case "bar":
+      return BarSkeleton;
   }
 });
 </script>
