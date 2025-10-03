@@ -10,14 +10,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return;
   }
 
-  if (!auth.token && auth.refreshToken) {
-    try {
-      await auth.refresh();
-    } catch {
-      return navigateTo("/login");
-    }
-  }
-
   if (!auth.isAuthenticated) {
     return navigateTo("/login");
   }
