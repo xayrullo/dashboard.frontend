@@ -22,10 +22,20 @@
           class="w-full md:max-w-[300px]"
         >
         </v-select>
+        <date-input
+          v-if="periodType === 'range'"
+          v-model="dateRange"
+          range
+          multi-calendars
+          :max-date="getNextDateString(new Date(), 1)"
+          label="Date range"
+          class="w-full md:max-w-[300px]"
+          @on-change="onChangeDateRange"
+        />
         <v-select
           v-model="periodType"
           :items="PERIOD_TYPES"
-          label="Date range"
+          label="Range type"
           class="w-full md:max-w-[300px]"
         ></v-select>
       </div>
@@ -119,8 +129,13 @@ import {
   fetchSalesAnalytics,
   fetchTotalSales,
 } from "~/services/dashboard";
+import DateInput from "~/components/ui/date-input.vue";
 import type { ITotalSales } from "~/types/dashboard";
-import { priceFormatter } from "~/utils/tools";
+import {
+  getDateRangeString,
+  getNextDateString,
+  priceFormatter,
+} from "~/utils/tools";
 
 interface IQueryParams {
   startDate: string;
@@ -133,10 +148,11 @@ const breadcrumbs = [
   { title: "Dashboard", disabled: true, href: "/dashboard" },
 ];
 
-const periodType = ref<string>("today");
+const dateRange = ref<string[]>(getDateRangeString(new Date(), 7));
+const periodType = ref<string>("week");
 const queryParams = ref<IQueryParams>({
-  startDate: "2025-09-25",
-  endDate: "2025-10-01",
+  startDate: getNextDateString(new Date(), -6),
+  endDate: getNextDateString(new Date(), 1),
   categories: ["book", "notebook", "phone"],
 });
 
@@ -198,4 +214,46 @@ const salesAnalytics = computed(() => {
   if (!salesAnalyticsData.value) return null;
   return salesAnalyticsData.value;
 });
+
+function onChangeDateRange() {
+  if (dateRange.value) {
+    queryParams.value = {
+      startDate: dateRange.value[0] as string,
+      endDate: dateRange.value[1] as string,
+      categories: queryParams.value.categories,
+    };
+  }
+}
+
+watch(
+  () => periodType.value,
+  () => {
+    if (periodType.value !== "range") {
+      let startDate = "";
+      let endDate = "";
+      switch (periodType.value) {
+        case "today":
+          startDate = getNextDateString(new Date(), 1);
+          endDate = getNextDateString(new Date(), 2);
+          break;
+        case "week":
+          startDate = getNextDateString(new Date(), -6);
+          endDate = getNextDateString(new Date(), 1);
+          break;
+        case "month":
+          startDate = getNextDateString(new Date(), -29);
+          endDate = getNextDateString(new Date(), 1);
+          break;
+
+        default:
+          break;
+      }
+      queryParams.value = {
+        startDate: startDate,
+        endDate: endDate,
+        categories: queryParams.value.categories,
+      };
+    }
+  }
+);
 </script>
