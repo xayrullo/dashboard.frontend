@@ -122,7 +122,7 @@ export async function useApi<T = unknown>(
     options.cache = false;
   }
 
-  const response = await useFetch<T>(url, {
+  const response = useFetch<T>(url, {
     ...options,
     onRequest: (ctx) => {
       if (options.onRequest) options.onRequest(ctx);
