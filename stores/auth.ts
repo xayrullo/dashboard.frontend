@@ -9,7 +9,7 @@ export const useAuthStore = defineStore("auth", () => {
   const refreshToken = useCookie<string | null>("refreshToken", {
     default: () => null,
   });
-  const user = ref<IUser | null>(null);
+  const user = useCookie<IUser | null>("user", { default: () => null });
 
   const isAuthenticated = computed(() => !!token.value);
 

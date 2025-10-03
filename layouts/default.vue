@@ -10,24 +10,31 @@
         "
       >
         <h1 class="text-h6">My Website</h1>
-        <v-btn
-          variant="text"
-          :icon="
-            $vuetify.theme.name === 'dark'
-              ? 'mdi-weather-sunny'
-              : 'mdi-weather-night'
-          "
-          @click="$vuetify.theme.toggle()"
-        ></v-btn>
+        <div class="flex items-center gap-4">
+          <v-btn
+            variant="text"
+            :icon="
+              $vuetify.theme.name === 'dark'
+                ? 'mdi-weather-sunny'
+                : 'mdi-weather-night'
+            "
+            @click="$vuetify.theme.toggle()"
+          ></v-btn>
+          <v-avatar size="large">
+            <v-img
+              :alt="authStore.user?.username"
+              :src="authStore.user?.image"
+            />
+          </v-avatar>
+        </div>
       </div>
     </header>
     <main>
       <slot />
     </main>
-    <footer>
-      <p>&copy; 2025 My Website</p>
-    </footer>
   </v-app>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const authStore = useAuthStore();
+</script>
