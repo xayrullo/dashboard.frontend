@@ -13,7 +13,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isAuthenticated = computed(() => !!token.value);
 
-  async function login(params: { username: string; password: string }) {
+  async function login(params: { email: string; password: string }) {
     try {
       const res = await fetchLogin(params);
       if (res.success.value && res.data.value) {

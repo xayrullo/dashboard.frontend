@@ -1,6 +1,5 @@
 import { createError, useRuntimeConfig, useFetch, navigateTo } from "nuxt/app";
 import defu from "defu";
-import { useRoute } from "vue-router";
 
 import type { UseFetchOptions } from "@vueuse/core";
 
@@ -9,7 +8,8 @@ import { ERROR_SEPARATOR } from "#imports";
 import { fetchRefreshToken } from "~/services/auth";
 
 interface ErrorType {
-  errors: Record<string, string[]>;
+  message: string;
+  statusCode: number;
 }
 type FetchOptions<T> = UseFetchOptions<T> & { timeout?: number };
 
@@ -23,7 +23,6 @@ export async function useApi<T = unknown>(
 
   const config = useRuntimeConfig();
   const userToken = authStore.token;
-  const route = useRoute();
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -109,16 +108,10 @@ export async function useApi<T = unknown>(
       const statusMessage = response.statusText || "";
       const errorsMsg = (response._data || {}) as ErrorType;
 
-      const errorEntries = Object.entries(errorsMsg.errors);
-
-      const message = errorEntries.reduce((acc: string[], [key, value]) => {
-        return [...acc, ...value.map((item) => `${key}: ${item}`)];
-      }, []);
-
       throw createError({
         statusCode,
         statusMessage,
-        message: message.join(ERROR_SEPARATOR),
+        message: errorsMsg.message,
       });
     },
   };
@@ -129,7 +122,7 @@ export async function useApi<T = unknown>(
     options.cache = false;
   }
 
-  const response = useFetch<T>(url, {
+  const response = await useFetch<T>(url, {
     ...options,
     onRequest: (ctx) => {
       if (options.onRequest) options.onRequest(ctx);

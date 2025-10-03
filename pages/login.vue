@@ -14,10 +14,10 @@
           <div>
             <v-form ref="formRef" class="space-y-3" @submit.prevent="login">
               <v-text-field
-                label="Username"
+                label="Email address"
                 placeholder="johndoe@gmail.com"
                 type="email"
-                v-model="form.username"
+                v-model="form.email"
                 :rules="[rules.required, rules.email]"
               />
 
@@ -47,8 +47,8 @@ definePageMeta({
 const authStore = useAuthStore();
 
 const formRef = ref<HTMLFormElement | null>(null);
-const form = ref<{ username: string; password: string }>({
-  username: "sophia.brown@x.dummyjson.com",
+const form = ref<{ email: string; password: string }>({
+  email: "sophia.brown@x.dummyjson.com",
   password: "sophiabpass",
 });
 

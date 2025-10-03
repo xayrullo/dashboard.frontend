@@ -4,13 +4,14 @@ import type { IErrorResponse } from "~/types";
 import type { ILoginResponse, IRefreshResponse } from "./../types/auth";
 
 export const fetchLogin = async (params: {
-  username: string;
+  email: string;
   password: string;
 }) => {
-  const response = await useApi<ILoginResponse>("/auth/login", {
+  const response = await useApi<ILoginResponse>("/api/v1/auth/login", {
     method: "POST",
     body: params,
   });
+
   return {
     ...response,
     error: computed(() => {
