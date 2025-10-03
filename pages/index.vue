@@ -9,6 +9,26 @@
       </v-breadcrumbs>
     </div>
     <div class="space-y-4">
+      <div
+        class="block md:flex items-center justify-end gap-x-4 space-y-4 md:space-y-0"
+      >
+        <v-select
+          v-model="queryParams.categories"
+          :items="CATEGORIES"
+          multiple
+          clearable
+          chips
+          label="Categories"
+          class="w-full md:max-w-[300px]"
+        >
+        </v-select>
+        <v-select
+          v-model="periodType"
+          :items="PERIOD_TYPES"
+          label="Date range"
+          class="w-full md:max-w-[300px]"
+        ></v-select>
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
         <v-card class="col-span-1">
           <v-card-text class="flex items-center justify-between">
@@ -88,14 +108,6 @@
             </client-only>
           </div>
         </v-card-text>
-        <!-- <client-only>
-          <chart-base type="line" :data="lineChartData" />
-          <chart-base type="pie" :data="pieChartData" />
-          <chart-base type="radar" :data="radarChartData" />
-          <chart-base type="polarArea" :data="polarAreaChartData" />
-          <chart-base type="bubble" :data="bubbleChartData" />
-          <chart-base type="scatter" :data="scatterChartData" />
-        </client-only> -->
       </v-card>
     </div>
   </v-container>
@@ -110,152 +122,58 @@ import {
 import type { ITotalSales } from "~/types/dashboard";
 import { priceFormatter } from "~/utils/tools";
 
+interface IQueryParams {
+  startDate: string;
+  endDate: string;
+  categories: string[];
+}
+
 const breadcrumbs = [
   { title: "Home", disabled: false, href: "/" },
   { title: "Dashboard", disabled: true, href: "/dashboard" },
 ];
 
-const lineChartData = {
-  labels: ["January", "February", "March", "April", "May", "June", "July"],
-  datasets: [
-    {
-      label: "Visitors",
-      borderColor: "#42b983",
-      data: [30, 50, 25, 60, 40, 80, 70],
-      fill: false,
-    },
-  ],
-};
-
-const pieChartData = {
-  labels: ["Red", "Blue", "Yellow"],
-  datasets: [
-    {
-      label: "My First Dataset",
-      data: [300, 50, 100],
-      backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
-      hoverOffset: 4,
-    },
-  ],
-};
-
-const radarChartData = {
-  labels: [
-    "Eating",
-    "Drinking",
-    "Sleeping",
-    "Designing",
-    "Coding",
-    "Cycling",
-    "Running",
-  ],
-  datasets: [
-    {
-      label: "My First Dataset",
-      data: [65, 59, 90, 81, 56, 55, 40],
-      fill: true,
-      backgroundColor: "rgba(255, 99, 132, 0.2)",
-      borderColor: "rgb(255, 99, 132)",
-      pointBackgroundColor: "rgb(255, 99, 132)",
-      pointBorderColor: "#fff",
-      pointHoverBackgroundColor: "#fff",
-      pointHoverBorderColor: "rgb(255, 99, 132)",
-    },
-    {
-      label: "My Second Dataset",
-      data: [28, 48, 40, 19, 96, 27, 100],
-      fill: true,
-      backgroundColor: "rgba(54, 162, 235, 0.2)",
-      borderColor: "rgb(54, 162, 235)",
-      pointBackgroundColor: "rgb(54, 162, 235)",
-      pointBorderColor: "#fff",
-      pointHoverBackgroundColor: "#fff",
-      pointHoverBorderColor: "rgb(54, 162, 235)",
-    },
-  ],
-};
-
-const polarAreaChartData = {
-  labels: ["Red", "Green", "Yellow", "Grey", "Blue"],
-  datasets: [
-    {
-      label: "My First Dataset",
-      data: [11, 16, 7, 3, 14],
-      backgroundColor: [
-        "rgb(255, 99, 132)",
-        "rgb(75, 192, 192)",
-        "rgb(255, 205, 86)",
-        "rgb(201, 203, 207)",
-        "rgb(54, 162, 235)",
-      ],
-    },
-  ],
-};
-
-const scatterChartData = {
-  datasets: [
-    {
-      label: "Scatter Dataset",
-      data: [
-        { x: -10, y: 0 },
-        { x: 0, y: 10 },
-        { x: 10, y: 5 },
-        { x: 0.5, y: 5.5 },
-      ],
-      backgroundColor: "rgb(255, 99, 132)",
-    },
-  ],
-};
-
-const bubbleChartData = {
-  datasets: [
-    {
-      label: "Bubble Dataset",
-      data: [
-        { x: 20, y: 30, r: 15 },
-        { x: 40, y: 10, r: 10 },
-        { x: 25, y: 50, r: 20 },
-        { x: 35, y: 40, r: 25 },
-      ],
-      backgroundColor: "rgb(54, 162, 235)",
-    },
-  ],
-};
+const periodType = ref<string>("today");
+const queryParams = ref<IQueryParams>({
+  startDate: "2025-09-25",
+  endDate: "2025-10-01",
+  categories: ["book", "notebook", "phone"],
+});
 
 const { data: totalSalesData, pending: totalSalesPending } = useAsyncData(
   "fetch-total-sales",
   async () => {
-    const response = await fetchTotalSales({
-      startDate: "2025-09-25",
-      endDate: "2025-09-29",
-    });
+    const response = await fetchTotalSales(queryParams.value);
 
     return response.data.value ?? [];
+  },
+  {
+    watch: [() => JSON.stringify(queryParams.value)],
   }
 );
 
 const { data: salesAnalyticsData, pending: salesAnalyticsPending } =
-  useAsyncData("fetch-sales-analytics", async () => {
-    const response = await fetchSalesAnalytics({
-      startDate: "2025-09-25",
-      endDate: "2025-09-29",
-      categories: ["book", "phone", "pc", "car"],
-    });
+  useAsyncData(
+    "fetch-sales-analytics",
+    async () => {
+      const response = await fetchSalesAnalytics(queryParams.value);
 
-    return response.data.value ?? [];
-  });
+      return response.data.value ?? [];
+    },
+    {
+      watch: [() => JSON.stringify(queryParams.value)],
+    }
+  );
 
 const { data: cardsData, pending: cardsPending } = useAsyncData(
   "fetch-cards",
   async () => {
-    const response = await fetchCards({
-      startDate: "2025-09-25",
-      endDate: "2025-09-29",
-    });
-
-    console.log("Cards Response", response);
+    const response = await fetchCards(queryParams.value);
 
     return response.data.value;
+  },
+  {
+    watch: [() => JSON.stringify(queryParams.value)],
   }
 );
 

@@ -8,6 +8,7 @@ import type {
 export const fetchTotalSales = async (params: {
   startDate: string;
   endDate: string;
+  categories: string[];
 }) => {
   const { data, error } = await useApi<ITotalSalesResponse[]>(
     "/api/dashboard/total-sales",
