@@ -13,3 +13,10 @@ export interface ITotalSalesResponse {
   data: number;
   backgroundColor: string;
 }
+
+export interface ICardsResponse {
+  totalSales: number;
+  totalOrders: number;
+  bill: number;
+  users: number;
+}

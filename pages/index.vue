@@ -18,7 +18,9 @@
               icon="mdi-cash-multiple"
             ></v-btn>
             <div class="text-right">
-              <div class="text-lg font-semibold">$25,000</div>
+              <div class="text-lg font-semibold">
+                {{ priceFormatter(cardsData?.totalSales, "$") }}
+              </div>
               <div class="text-sm text-gray-500">Total Sales</div>
             </div>
           </v-card-text>
@@ -27,7 +29,9 @@
           <v-card-text class="flex items-center justify-between">
             <v-btn variant="text" color="green" icon="mdi-cart-outline"></v-btn>
             <div class="text-right">
-              <div class="text-lg font-semibold">250</div>
+              <div class="text-lg font-semibold">
+                {{ priceFormatter(cardsData?.totalOrders) }}
+              </div>
               <div class="text-sm text-gray-500">Total Orders</div>
             </div>
           </v-card-text>
@@ -36,7 +40,9 @@
           <v-card-text class="flex items-center justify-between">
             <v-btn variant="text" color="blue" icon="mdi-cash-multiple"></v-btn>
             <div class="text-right">
-              <div class="text-lg font-semibold">$5,000</div>
+              <div class="text-lg font-semibold">
+                {{ priceFormatter(cardsData?.bill, "$") }}
+              </div>
               <div class="text-sm text-gray-500">Average Bill</div>
             </div>
           </v-card-text>
@@ -49,7 +55,9 @@
               icon="mdi-account-multiple"
             ></v-btn>
             <div class="text-right">
-              <div class="text-lg font-semibold">100</div>
+              <div class="text-lg font-semibold">
+                {{ priceFormatter(cardsData?.users) }}
+              </div>
               <div class="text-sm text-gray-500">Unique Users</div>
             </div>
           </v-card-text>
@@ -94,49 +102,18 @@
 </template>
 
 <script setup lang="ts">
-import { fetchSalesAnalytics, fetchTotalSales } from "~/services/dashboard";
+import {
+  fetchCards,
+  fetchSalesAnalytics,
+  fetchTotalSales,
+} from "~/services/dashboard";
 import type { ITotalSales } from "~/types/dashboard";
+import { priceFormatter } from "~/utils/tools";
 
 const breadcrumbs = [
   { title: "Home", disabled: false, href: "/" },
   { title: "Dashboard", disabled: true, href: "/dashboard" },
 ];
-
-const totalSalesByCategory = ref<ITotalSales>({
-  labels: [
-    "2025-09-25",
-    "2025-09-26",
-    "2025-09-27",
-    "2025-09-28",
-    "2025-09-29",
-  ],
-  datasets: [
-    {
-      label: "Online Store",
-      data: [1200, 1500, 1800, 2000, 2200],
-      backgroundColor: "#FF6384",
-      hoverOffset: 4,
-    },
-    {
-      label: "Retail Store",
-      data: [1000, 1300, 1600, 1900, 2100],
-      backgroundColor: "#36A2EB",
-      hoverOffset: 4,
-    },
-    {
-      label: "BTB Revenue",
-      data: [800, 1100, 1400, 1700, 2000],
-      backgroundColor: "#FFCE56",
-      hoverOffset: 4,
-    },
-    {
-      label: "Marketplace Revenue",
-      data: [900, 1200, 1500, 1800, 2100],
-      backgroundColor: "#4BC0C0",
-      hoverOffset: 4,
-    },
-  ],
-});
 
 const lineChartData = {
   labels: ["January", "February", "March", "April", "May", "June", "July"],
@@ -267,6 +244,20 @@ const { data: salesAnalyticsData, pending: salesAnalyticsPending } =
 
     return response.data.value ?? [];
   });
+
+const { data: cardsData, pending: cardsPending } = useAsyncData(
+  "fetch-cards",
+  async () => {
+    const response = await fetchCards({
+      startDate: "2025-09-25",
+      endDate: "2025-09-29",
+    });
+
+    console.log("Cards Response", response);
+
+    return response.data.value;
+  }
+);
 
 const totalSales = computed(() => {
   if (!totalSalesData.value) return null;

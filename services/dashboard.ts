@@ -1,5 +1,9 @@
 import type { IErrorResponse } from "~/types";
-import type { ITotalSales, ITotalSalesResponse } from "~/types/dashboard";
+import type {
+  ICardsResponse,
+  ITotalSales,
+  ITotalSalesResponse,
+} from "~/types/dashboard";
 
 export const fetchTotalSales = async (params: {
   startDate: string;
@@ -26,6 +30,21 @@ export const fetchSalesAnalytics = async (params: {
     "/api/dashboard/sales-analytics",
     { query: params }
   );
+
+  return {
+    data: data,
+    error: error.value as IErrorResponse,
+    success: computed(() => !error.value),
+  };
+};
+
+export const fetchCards = async (params: {
+  startDate: string;
+  endDate: string;
+}) => {
+  const { data, error } = await useApi<ICardsResponse>("/api/dashboard/cards", {
+    query: params,
+  });
 
   return {
     data: data,
