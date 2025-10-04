@@ -36,6 +36,9 @@ yarn dev
 
 # bun
 bun run dev
+
+# unit test
+yarn test --ui
 ```
 
 ## Production

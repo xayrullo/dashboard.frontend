@@ -11,6 +11,13 @@ export function getNextDateString(date = new Date(), days = 1): string {
   return result.toISOString().split("T")[0] as string;
 }
 
+export function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 // that function return only start and end dates in massive
 export function getDateRangeString(
   endDate: string | Date = new Date(),
@@ -20,10 +27,7 @@ export function getDateRangeString(
   const start = new Date(end);
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
-  start.setDate(end.getDate() - days);
+  start.setDate(start.getDate() - days);
 
-  return [
-    start.toISOString().split("T")[0] as string,
-    end.toISOString().split("T")[0] as string,
-  ];
+  return [formatLocalDate(start), formatLocalDate(end)];
 }
