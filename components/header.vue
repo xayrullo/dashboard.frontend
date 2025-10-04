@@ -19,9 +19,15 @@
           "
           @click="onChangeTheme"
         ></v-btn>
-        <v-avatar size="large">
+        <v-avatar v-if="authStore.isAuthenticated" size="large">
           <v-img :alt="authStore.user?.username" :src="authStore.user?.image" />
         </v-avatar>
+        <v-btn
+          v-if="authStore.isAuthenticated"
+          variant="text"
+          icon="mdi-logout"
+          @click="authStore.logout()"
+        ></v-btn>
       </div>
     </div>
   </header>

@@ -1,39 +1,50 @@
 <template>
-  <v-container class="h-full">
-    <div
-      class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24"
-    >
-      <div class="mx-auto w-full max-w-sm lg:w-96">
-        <div>
-          <h2 class="mt-8 text-2xl/9 font-bold tracking-tight text-center">
-            Sign in to your account
-          </h2>
-        </div>
+  <v-container class="h-full flex items-center justify-center">
+    <div class="w-full max-w-sm lg:w-96">
+      <!-- Title -->
+      <h2 class="mt-8 text-2xl font-bold tracking-tight text-center">
+        Sign in to your account
+      </h2>
 
-        <div class="mt-10">
-          <div>
-            <v-form ref="formRef" class="space-y-3" @submit.prevent="login">
-              <v-text-field
-                label="Email address"
-                placeholder="johndoe@gmail.com"
-                type="email"
-                v-model="form.email"
-                :rules="[rules.required, rules.email]"
-              />
+      <!-- Form -->
+      <v-form ref="formRef" class="mt-10 space-y-3" @submit.prevent="login">
+        <v-text-field
+          v-model="form.email"
+          label="Email address"
+          placeholder="johndoe@gmail.com"
+          type="email"
+          :rules="[rules.required, rules.email]"
+          clearable
+        />
 
-              <v-text-field
-                label="Password"
-                type="password"
-                v-model="form.password"
-                :rules="[rules.required, rules.min]"
-              />
-              <v-btn class="w-full" size="large" color="success" type="submit">
-                Sign in
-              </v-btn>
-            </v-form>
-          </div>
-        </div>
-      </div>
+        <v-text-field
+          v-model="form.password"
+          label="Password"
+          type="password"
+          :rules="[rules.required, rules.min]"
+          clearable
+        />
+
+        <v-btn
+          class="w-full"
+          size="large"
+          color="success"
+          type="submit"
+          :loading="loading"
+          :disabled="loading"
+        >
+          Sign in
+        </v-btn>
+
+        <v-alert
+          v-if="errorMessage"
+          type="error"
+          density="compact"
+          class="mt-4"
+        >
+          {{ errorMessage }}
+        </v-alert>
+      </v-form>
     </div>
   </v-container>
 </template>
@@ -44,14 +55,24 @@ definePageMeta({
   middleware: ["guest"],
 });
 
-const authStore = useAuthStore();
+import { useAuthStore } from "~/stores/auth";
 
-const formRef = ref<HTMLFormElement | null>(null);
-const form = ref<{ email: string; password: string }>({
+const authStore = useAuthStore();
+const formRef = ref();
+const loading = ref(false);
+const errorMessage = ref("");
+
+// ✅ Strong typing for form
+interface LoginForm {
+  email: string;
+  password: string;
+}
+const form = ref<LoginForm>({
   email: "faker@gmail.com",
   password: "123456",
 });
 
+// ✅ Extract rules into reusable structure
 const rules = {
   required: (v: string) => !!v || "Field is required",
   email: (v: string) => /.+@.+\..+/.test(v) || "E-mail must be valid",
@@ -60,10 +81,18 @@ const rules = {
 
 async function login() {
   const { valid } = await formRef.value?.validate();
-  if (valid) {
-    authStore.login(form.value).then(() => {
-      navigateTo("/");
-    });
+  if (!valid) return;
+
+  loading.value = true;
+  errorMessage.value = "";
+
+  try {
+    await authStore.login(form.value);
+    navigateTo("/");
+  } catch (err: any) {
+    errorMessage.value = err?.message || "Login failed. Please try again.";
+  } finally {
+    loading.value = false;
   }
 }
 </script>
